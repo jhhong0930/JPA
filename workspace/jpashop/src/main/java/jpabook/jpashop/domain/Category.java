@@ -25,7 +25,7 @@ public class Category {
     private List<Item> items = new ArrayList<>();
     // ManyToMany는 실무에서는 쓰지 않는다
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;
 
