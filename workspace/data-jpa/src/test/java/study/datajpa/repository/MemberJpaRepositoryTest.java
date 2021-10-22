@@ -16,20 +16,18 @@ import static org.assertj.core.api.Assertions.*;
 class MemberJpaRepositoryTest {
 
     @Autowired
-    MemberJpaRepository memberRepository;
+    MemberRepository memberRepository;
 
     @Test
-    void testMember() {
-
-        // proxy 객체
-        System.out.println("memberRepository = " + memberRepository.getClass());
+    public void testMember() {
 
         Member member = new Member("memberA");
         Member savedMember = memberRepository.save(member);
+        Member findMember = memberRepository.findById(savedMember.getId()).get();
 
-        Member findMember = memberRepository.find(savedMember.getId());
-
-        assertThat(findMember.getId()).isEqualTo(member.getId());
+        Assertions.assertThat(findMember.getId()).isEqualTo(member.getId());
+        Assertions.assertThat(findMember.getUsername()).isEqualTo(member.getUsername());
+        Assertions.assertThat(findMember).isEqualTo(member); //JPA 엔티티 동일성 보장
     }
 
     @Test
