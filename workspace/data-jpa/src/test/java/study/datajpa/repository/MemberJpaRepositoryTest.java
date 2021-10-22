@@ -21,6 +21,9 @@ class MemberJpaRepositoryTest {
     @Test
     void testMember() {
 
+        // proxy 객체
+        System.out.println("memberRepository = " + memberRepository.getClass());
+
         Member member = new Member("memberA");
         Member savedMember = memberRepository.save(member);
 
