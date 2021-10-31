@@ -4,6 +4,9 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
@@ -124,6 +127,44 @@ public class MemberRepositoryTest {
         Member findMember = memberRepository.findMemberByUsername("AAAAA");
         // 조회 대상이 없으면 null 반환 
         System.out.println("findMember = " + findMember);
+    }
+
+    @Test
+    public void paging() throws Exception {
+
+        // given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        // page는 0부터 시작
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        // when
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        // 페이지를 유지하면서 엔티티를 dto로 변환
+        Page<MemberDto> map = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+
+        /**
+         * Page:  추가 count 쿼리 결과를 포함하는 페이징
+         * Slice: 추가 count 쿼리 없이 다음 페이지만 확인 가능(limit + 1 조회)
+         * List:  추가 count 쿼리 없이 결과만 반환
+         */
+
+        // then
+        List<Member> content = page.getContent();
+        long totalElements = page.getTotalElements();
+
+        assertThat(content.size()).isEqualTo(3); // 조회된 데이터 수
+        assertThat(page.getTotalElements()).isEqualTo(5); // 전체 데이터 수
+        assertThat(page.getNumber()).isEqualTo(0); // 페이지 번호
+        assertThat(page.getTotalPages()).isEqualTo(2); // 전체 페이지 번호
+        assertThat(page.isFirst()).isTrue(); // 첫번째 항목인가?
+        assertThat(page.hasNext()).isTrue(); // 다음 페이지가 있는가?
+        assertThat(page.hasPrevious()).isFalse(); // 이전 페이지가 있는가?
     }
 
 }
