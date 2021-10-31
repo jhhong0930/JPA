@@ -108,4 +108,22 @@ public class MemberRepositoryTest {
         }
     }
 
+    @Test
+    void returnType() {
+
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
+
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<Member> result = memberRepository.findListByUsername("AAAAA");
+        // 조회 대상이 없으면 null이 아니라 empty collection 반환
+        System.out.println("result = " + result.size());
+
+        Member findMember = memberRepository.findMemberByUsername("AAAAA");
+        // 조회 대상이 없으면 null 반환 
+        System.out.println("findMember = " + findMember);
+    }
+
 }
