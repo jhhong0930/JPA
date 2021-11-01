@@ -12,6 +12,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +25,7 @@ public class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext EntityManager em;
 
     @Test
     void testMember() {
@@ -165,6 +168,28 @@ public class MemberRepositoryTest {
         assertThat(page.isFirst()).isTrue(); // 첫번째 항목인가?
         assertThat(page.hasNext()).isTrue(); // 다음 페이지가 있는가?
         assertThat(page.hasPrevious()).isFalse(); // 이전 페이지가 있는가?
+    }
+
+    @Test
+    void bulkUpdate() {
+
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20);
+        // 벌크 연산은 DB를 직접 조작해버리기 때문에 영속성 컨텍스트에는 반영이 되어있지 않다
+        // 따라서 벌크 연산시 영속성 컨텍스트를 비워줘야 한다
+        // @Modifying에 clearAutomatically 속성을 주게되면 이 역할을 해준다
+//        em.flush();
+//        em.clear();
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
     }
 
 }
