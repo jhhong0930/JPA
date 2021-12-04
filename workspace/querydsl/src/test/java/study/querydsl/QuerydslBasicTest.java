@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -397,4 +398,75 @@ public class QuerydslBasicTest {
 
         assertThat(loaded).as("페치 조인 적용").isTrue();
     }
+
+    /**
+     * 나이가 가장 많은 회원 조회
+     */
+    @Test
+    void subQuery() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        JPAExpressions // static import 가능
+                                .select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+        assertThat(result).extracting("age")
+                .containsExactly(40);
+    }
+
+    /**
+     * 서브쿼리 여러 건 처리, in 사용
+     */
+    @Test
+    void subQueryIn() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.in(
+                        JPAExpressions
+                                .select(memberSub.age)
+                                .from(memberSub)
+                                .where(memberSub.age.gt(10))
+                ))
+                .fetch();
+        assertThat(result).extracting("age")
+                .containsExactly(20, 30, 40);
+    }
+
+    @Test
+    void selectSubQuery() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Tuple> fetch = queryFactory
+                .select(member.username,
+                        JPAExpressions
+                                .select(memberSub.age.avg())
+                                .from(memberSub)
+                ).from(member)
+                .fetch();
+        for (Tuple tuple : fetch) {
+            System.out.println("username = " + tuple.get(member.username));
+            System.out.println("age = " + tuple.get(JPAExpressions.select(memberSub.age.avg())
+                            .from(memberSub)));
+        }
+    }
+
+    /**
+     * from 절의 서브쿼리 한계
+     * - JPA JPQL 서브쿼리의 한계점으로 from 절의 서브쿼리(인라인 뷰)는 지원하지 않는다.
+     * - 하이버네이트 구현체를 사용하면 select 절의 서브쿼리는 지원한다.
+     * - Querydsl도 하이버네이트 구현체를 사용하면 select 절의 서브쿼리를 지원한다.
+     * from 절의 서브쿼리 해결방안
+     * 1. 서브쿼리를 join으로 변경한다. (가능한 상황도 있고, 불가능한 상황도 있다.)
+     * 2. 애플리케이션에서 쿼리를 2번 분리해서 실행한다.
+     * 3. nativeSQL을 사용한다.
+     */
 }
