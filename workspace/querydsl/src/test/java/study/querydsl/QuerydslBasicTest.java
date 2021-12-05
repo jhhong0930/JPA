@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -656,5 +657,23 @@ public class QuerydslBasicTest {
          * userDto = UserDto(name=null, age=30)
          * userDto = UserDto(name=null, age=40)
          */
+    }
+
+    /**
+     * Q타입 DTO를 이용한 방식
+     * 잘못된 필드값이 들어가게 되면 컴파일 시점에 오류를 찾을 수 있다
+     * 단, DTO에 QueryDSL 어노테이션을 유지해야 하는 점과 DTO까지 Q 파일을 생성해야 하는 단점이 있다.
+     */
+    @Test
+    void findDtoByQueryProjection() {
+
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
     }
 }
